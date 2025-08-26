@@ -17,7 +17,6 @@ const bootstrap = async (app, express) => {
 
   // Routes
 
-
   // Handle all undefined routes with a custom "not found" handler
   app.all("*", notFoundHandler);
 

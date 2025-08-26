@@ -10,5 +10,5 @@ const port = process.env.PORT;
 
 await bootstrap(app, express);
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () => console.log(`Chatbox listening on port ${port}!`));
     
