@@ -54,6 +54,11 @@ const userSchema = new Schema(
         expiresIn: Date,
       },
     ],
+    status: {
+      type: String,
+      enum: ["online", "offline"],
+      default: "offline",
+    },
   },
   { timestamps: true, strictQuery: true }
 );
