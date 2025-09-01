@@ -9,36 +9,36 @@ import * as schema from "./user.validation.js";
 const router = Router();
 
 /**
- * @route   GET /users/me
+ * @route   GET /user/profile
  * @desc    Get current user profile
  
  */
 router.get(
-  "/me",
+  "/profile",
   isAuthenticated,
-  validation(schema.getMe),
-  asyncHandler(service.getMe)
+  validation(schema.getProfile),
+  asyncHandler(service.getProfile)
 );
 
 /**
- * @route   PATCH /users/me
+ * @route   PATCH /user/profile
  * @desc    Update current user profile
  
  */
 router.patch(
-  "/me",
+  "/profile",
   isAuthenticated,
-  validation(schema.updateMe),
-  asyncHandler(service.updateMe)
+  validation(schema.updateProfile),
+  asyncHandler(service.updateProfile)
 );
 
 /**
- * @route   PATCH /users/me/profile-pic
+ * @route   PATCH /user/profile-pic
  * @desc    Update user profile picture
  
  */
 router.patch(
-  "/me/profile-pic",
+  "/profile-pic",
   isAuthenticated,
   uploadCloud(fileValidation.image).single("profilePic"),
   validation(schema.updateProfilePic),
@@ -46,7 +46,7 @@ router.patch(
 );
 
 /**
- * @route   GET /users/:id
+ * @route   GET /user/:id
  * @desc    Get user by ID
  
  */
@@ -58,7 +58,7 @@ router.get(
 );
 
 /**
- * @route   GET /users/search
+ * @route   GET /user/search
  * @desc    Search users
  
  */
@@ -70,7 +70,7 @@ router.get(
 );
 
 /**
- * @route   POST /users/:id/add-contact
+ * @route   POST /user/:id/add-contact
  * @desc    Add user to contacts
  
  */
@@ -82,7 +82,7 @@ router.post(
 );
 
 /**
- * @route   DELETE /users/:id/remove-contact
+ * @route   DELETE /user/:id/remove-contact
  * @desc    Remove user from contacts
  
  */
@@ -94,7 +94,7 @@ router.delete(
 );
 
 /**
- * @route   GET /users/contacts
+ * @route   GET /user/contacts
  * @desc    Get user contacts
  
  */

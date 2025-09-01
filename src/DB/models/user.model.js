@@ -40,11 +40,6 @@ const userSchema = new Schema(
     address: {
       type: String,
     },
-    role: {
-      type: String,
-      enum: Object.values(roles),
-      default: roles.USER,
-    },
     profilePic: {
       secure_url: { type: String, default: defaultSecureURL_profilePic },
       public_id: { type: String, default: defaultPublicID_profilePic },
