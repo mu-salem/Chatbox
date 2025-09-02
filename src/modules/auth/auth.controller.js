@@ -48,6 +48,16 @@ router.post(
   asyncHandler(service.signupOrLoginWithGoogle)
 );
 
+/** 
+ * @route   POST /auth/sendForgetPasswordCode
+ * @desc    Send OTP for forget password
+ */
+router.post(
+    "/send-forget-password-code",
+    validation(authShema.sendForgetPasswordCode),
+    asyncHandler(authService.sendForgetPasswordCode)
+);
+
 /**
  * @route   POST /auth/forget-password
  * @desc    Request password reset
