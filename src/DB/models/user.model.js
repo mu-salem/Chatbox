@@ -59,6 +59,10 @@ const userSchema = new Schema(
       enum: ["online", "offline"],
       default: "offline",
     },
+    isLoggedIn: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true, strictQuery: true }
 );

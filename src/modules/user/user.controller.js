@@ -16,8 +16,7 @@ const router = Router();
 router.get(
   "/profile",
   isAuthenticated,
-  validation(schema.getProfile),
-  asyncHandler(service.getProfile)
+  asyncHandler(service.getLoginUserProfile)
 );
 
 /**
@@ -33,34 +32,42 @@ router.patch(
 );
 
 /**
+ * @route   PATCH /user/update-password
+ * @desc    Update user password
+ */
+router.patch(
+  "/update-password",
+  isAuthenticated,
+  validation(userScheme.updatePassword),
+  asyncHandler(userService.updatePassword)
+);
+
+/**
  * @route   PATCH /user/profile-pic
  * @desc    Update user profile picture
- 
  */
 router.patch(
   "/profile-pic",
   isAuthenticated,
-  uploadCloud(fileValidation.image).single("profilePic"),
+  uploadCloud().single("image"),
   validation(schema.updateProfilePic),
   asyncHandler(service.updateProfilePic)
 );
 
 /**
- * @route   GET /user/:id
- * @desc    Get user by ID
- 
+ * @route   GET /user/name/:name
+ * @desc    Get user by name
  */
 router.get(
-  "/:id",
+  "/name/:name",
   isAuthenticated,
-  validation(schema.getUserById),
-  asyncHandler(service.getUserById)
+  validation(schema.getUserByName), 
+  asyncHandler(service.getUserByName)
 );
 
 /**
  * @route   GET /user/search
  * @desc    Search users
- 
  */
 router.get(
   "/search",
@@ -72,7 +79,6 @@ router.get(
 /**
  * @route   POST /user/:id/add-contact
  * @desc    Add user to contacts
- 
  */
 router.post(
   "/:id/add-contact",
@@ -84,7 +90,6 @@ router.post(
 /**
  * @route   DELETE /user/:id/remove-contact
  * @desc    Remove user from contacts
- 
  */
 router.delete(
   "/:id/remove-contact",

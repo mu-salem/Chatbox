@@ -31,18 +31,22 @@ export const signup = async(req,res,next) => {
     return res.json({success:true,message:"User created successfully!"});
 }
 
-export const signin = async(req,res,next) => {
-    const isUser = await User.findOne({email:req.body.email});
-    if (!isUser) return next(new Error("Email is invalid!"), { cause: 404 });
+export const signin = async (req, res, next) => {
+  const isUser = await User.findOne({ email: req.body.email });
+  if (!isUser) return next(new Error("Email is invalid!"), { cause: 404 });
 
-    const match = bcrypt.compareSync(req.body.password,isUser.password);
-    if (!match) return next(new Error("Password is invalid!"), { cause: 401 });
+  const match = bcrypt.compareSync(req.body.password, isUser.password);
+  if (!match) return next(new Error("Password is invalid!"), { cause: 401 });
 
-    const token = jwt.sign({email:isUser.email},process.env.SECRET_KEY)
-    await Token.create({token,user:isUser._id,agent:req.headers["user-agent"]})
+  const token = jwt.sign({ email: isUser.email }, process.env.SECRET_KEY);
+  await Token.create({
+    token,
+    user: isUser._id,
+    agent: req.headers["user-agent"],
+  });
 
-    isUser.status = "online"
-    await isUser.save()
+  isUser.status = "online";
+  await isUser.save();
 
-    return res.json({success:true , message:"Welcome!" , token});
-}
+  return res.json({ success: true, message: "Welcome!", token });
+};
