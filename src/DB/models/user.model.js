@@ -1,7 +1,6 @@
 import { Schema, model, Types } from "mongoose";
 import { hash } from "../../utils/hashing/hash.js";
 import { OTP_TYPES, providers } from "../../utils/constants/authConstants.js";
-import { roles } from "../../utils/constants/authConstants.js";
 import {
   defaultPublicID_profilePic,
   defaultSecureURL_profilePic,

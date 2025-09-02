@@ -1,5 +1,5 @@
 import joi from "joi";
-import { isValidObjectId } from "../../middleware/validation.meddleware";
+import { isValidObjectId } from "../../middleware/validation.middleware.js";
 
 export const updateUser = joi
   .object({

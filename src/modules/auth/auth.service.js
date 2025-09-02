@@ -1,9 +1,9 @@
-import User from "./../../DB/models/user.model";
+import User from "./../../DB/models/user.model.js";
 import randomstring from "randomstring";
-import { eventEmitter } from "./../../utils/emails/email.event";
-import { compareHash, hash } from "../../utils/hashing/hash";
-import { OTP_TYPES, subjects } from "../../constants/subjects";
-import { generateToken, verifyToken } from "../../utils/token/token";
+import { eventEmitter } from "./../../utils/emails/email.event.js";
+import { compareHash, hash } from "../../utils/hashing/hash.js";
+import { generateToken, verifyToken } from "../../utils/token/token.js";
+import { OTP_TYPES, subjects } from "../../utils/constants/subjects.js";
 
 export const signup = async (req, res, next) => {
   const { email } = req.body;
@@ -156,13 +156,16 @@ export const forgetPassword = async (req, res, next) => {
 };
 
 export const resetPassword = async (req, res, next) => {
-  const { email, newPassword } = req.body;
+  const { newPassword, confirmPassword } = req.body;
 
-  const user = await User.findOne({ email: email });
+  const user = await User.findOne({ email });
   if (!user)
     return next(new Error("User with this email does not exist!"), {
       cause: 400,
     });
+
+  if (newPassword !== confirmPassword)
+    return next(new Error("Passwords do not match!", { cause: 400 }));
 
   const hashedPassword = hash({ plainText: newPassword });
 

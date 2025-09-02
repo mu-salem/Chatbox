@@ -8,7 +8,6 @@ import {
 } from "../../utils/file uploading/multerCloud.js";
 import * as service from "./message.service.js";
 import * as schema from "./message.validation.js";
-import { messageEndpoints } from "../../utils/constants/endpoints.js";
 
 const router = Router();
 

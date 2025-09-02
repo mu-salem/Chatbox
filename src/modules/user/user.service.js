@@ -1,4 +1,4 @@
-import User from "../../DB/models/user.model";
+import User from "../../DB/models/user.model.js";
 
 export const getLoginUserProfile = async (req, res, next) => {
   const user = await User.findOne({

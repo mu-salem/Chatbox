@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/error handling/asynchandler.js";
-import { validation } from "../../middleware/validation.middleware.js";
 import * as service from "./auth.service.js";
 import * as schema from "./auth.validation.js";
+import { validation } from "../../middleware/validation.middleware.js";
 
 const router = Router();
 
@@ -54,8 +54,8 @@ router.post(
  */
 router.post(
     "/send-forget-password-code",
-    validation(authShema.sendForgetPasswordCode),
-    asyncHandler(authService.sendForgetPasswordCode)
+    validation(schema.sendForgetPasswordCode),
+    asyncHandler(service.sendForgetPasswordCode)
 );
 
 /**

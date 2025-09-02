@@ -2,11 +2,9 @@ import { Router } from "express";
 import { asyncHandler } from "../../utils/error handling/asynchandler.js";
 import { validation } from "../../middleware/validation.middleware.js";
 import { isAuthenticated } from "../../middleware/authentication.middleware.js";
-import { isAuthorized } from "../../middleware/authorization.middleware.js";
 import { uploadCloud, fileValidation } from "../../utils/file uploading/multerCloud.js";
 import * as service from "./group.service.js";
 import * as schema from "./group.validation.js";
-import { groupEndpoints } from "../../utils/constants/endpoints.js";
 
 const router = Router();
 
@@ -67,7 +65,6 @@ router.patch(
 router.delete(
   "/:id",
   isAuthenticated,
-  isAuthorized(groupEndpoints.deleteGroup),
   validation(schema.deleteGroup),
   asyncHandler(service.deleteGroup)
 );

@@ -3,7 +3,7 @@ import User from "../DB/models/user.model.js";
 import { asyncHandler } from "../utils/error handling/asynchandler.js";
 import { verifyToken } from "../utils/token/token.js";
 
-const isAuthenticated = asyncHandler(async (req, res, next) => {
+export const isAuthenticated = asyncHandler(async (req, res, next) => {
     const { authorization } = req.headers;
     if (!authorization)
         return next(new Error("Token is required!"), { cause: 403 });
@@ -22,6 +22,4 @@ const isAuthenticated = asyncHandler(async (req, res, next) => {
     req.user = user;
     return next()
 })
-
-export default isAuthenticated
     
