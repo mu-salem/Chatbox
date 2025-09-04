@@ -4,11 +4,6 @@ export const providers = {
 };
 
 export const OTP_TYPES = {
-  EMAIL_VERIFICATION: "email-verification",
-  PASSWORD_RESET: "password-reset"
-};
-
-export const roles = {
-  USER: "user",
-  ADMIN: "admin"
+  CONFIRM_EMAIL: "confirm-email",
+  FORGET_PASSWORD: "forget-password",
 };

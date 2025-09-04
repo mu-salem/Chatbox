@@ -4,6 +4,7 @@ import { eventEmitter } from "./../../utils/emails/email.event.js";
 import { compareHash, hash } from "../../utils/hashing/hash.js";
 import { generateToken, verifyToken } from "../../utils/token/token.js";
 import { OTP_TYPES, subjects } from "../../utils/constants/subjects.js";
+import e from "express";
 
 export const signup = async (req, res, next) => {
   const { email } = req.body;
@@ -37,12 +38,31 @@ export const confirmOTP = async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) return next(new Error("User not found!"), { cause: 404 });
 
-  const otpRecord = user.OTP.find(
+  let otpRecord = user.OTP.find(
     (otp) => otp.type === type && otp.expiresIn > new Date()
   );
 
   if (!otpRecord) {
-    return next(new Error("Invalid or expired OTP!", { cause: 400 }));
+
+    const newOTP = generateOTP();
+    const hashedOTP = hash({ plainText: newOTP });
+
+    user.OTP = user.OTP.filter((otp) => otp.type !== type); 
+    user.OTP.push({
+      code: hashedOTP,
+      type,
+      expiresIn: new Date(Date.now() + 5 * 60 * 1000), 
+    });
+
+    await user.save();
+
+
+    eventEmitter.emit("SIGNUP", email, newOTP, subjects.signup);
+
+    return res.status(400).json({
+      success: false,
+      message: "OTP expired. A new OTP has been sent.",
+    });
   }
 
   if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
@@ -61,6 +81,7 @@ export const confirmOTP = async (req, res, next) => {
     message: "OTP confirmed successfully.",
   });
 };
+
 
 export const signin = async (req, res, next) => {
   const { email, password } = req.body;
