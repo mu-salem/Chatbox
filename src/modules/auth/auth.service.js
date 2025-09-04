@@ -38,31 +38,12 @@ export const confirmOTP = async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) return next(new Error("User not found!"), { cause: 404 });
 
-  let otpRecord = user.OTP.find(
+  const otpRecord = user.OTP.find(
     (otp) => otp.type === type && otp.expiresIn > new Date()
   );
 
   if (!otpRecord) {
-
-    const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
-    const hashedOTP = hash({ plainText: newOTP });
-
-    user.OTP = user.OTP.filter((otp) => otp.type !== type); 
-    user.OTP.push({
-      code: hashedOTP,
-      type,
-      expiresIn: new Date(Date.now() + 5 * 60 * 1000), 
-    });
-
-    await user.save();
-
-
-    eventEmitter.emit("SIGNUP", email, newOTP, subjects.signup);
-
-    return res.status(400).json({
-      success: false,
-      message: "OTP expired. A new OTP has been sent.",
-    });
+    return next(new Error("Invalid or expired OTP!", { cause: 400 }));
   }
 
   if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
@@ -81,7 +62,6 @@ export const confirmOTP = async (req, res, next) => {
     message: "OTP confirmed successfully.",
   });
 };
-
 
 export const signin = async (req, res, next) => {
   const { email, password } = req.body;
