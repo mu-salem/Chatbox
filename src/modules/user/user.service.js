@@ -1,10 +1,11 @@
-import User from "../../DB/models/user.model";
+import User from "../../DB/models/user.model.js";
 
 export const getLoginUserProfile = async (req, res, next) => {
-  const user = await User.findById({
+  const user = await User.findOne({
     _id: req.user._id,
     isLoggedIn: true,
   }).select("-password -OTP -__v -provider");
+
   if (!user) return next(new Error("User not found!"), { cause: 404 });
   return res.json({ success: true, results: { user } });
 };
@@ -139,7 +140,8 @@ export const removeContact = async (req, res, next) => {
   if (!user.contacts.includes(id))
     return next(new Error("User not found in contacts!"), { cause: 404 });
 
-  user.contacts = user.contacts.filter((contact) => contact !== id);
+  user.contacts = user.contacts.filter((contact) => contact.toString() !== id);
+
   await user.save();
 
   return res.json({
@@ -151,7 +153,10 @@ export const removeContact = async (req, res, next) => {
 
 export const getContacts = async (req, res, next) => {
   const userId = req.user._id;
-  const user = await User.findById(userId).populate("contacts");
+  const user = await User.findById(userId).populate(
+    "contacts",
+    "-password -OTP -__v -provider"
+  );
   if (!user) return next(new Error("User not found!"), { cause: 404 });
   return res.json({ success: true, results: { contacts: user.contacts } });
 };

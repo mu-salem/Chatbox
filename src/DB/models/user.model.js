@@ -1,7 +1,6 @@
 import { Schema, model, Types } from "mongoose";
 import { hash } from "../../utils/hashing/hash.js";
 import { OTP_TYPES, providers } from "../../utils/constants/authConstants.js";
-import { roles } from "../../utils/constants/authConstants.js";
 import {
   defaultPublicID_profilePic,
   defaultSecureURL_profilePic,
@@ -44,9 +43,9 @@ const userSchema = new Schema(
       secure_url: { type: String, default: defaultSecureURL_profilePic },
       public_id: { type: String, default: defaultPublicID_profilePic },
     },
-    contacts: [{ type: Types.ObjectId, ref: "User" }], 
-    groups: [{ type: Types.ObjectId, ref: "Group" }], 
-    stories: [{ type: Types.ObjectId, ref: "Story" }], 
+    contacts: [{ type: Types.ObjectId, ref: "User" }],
+    groups: [{ type: Types.ObjectId, ref: "Group" }],
+    stories: [{ type: Types.ObjectId, ref: "Story" }],
     OTP: [
       {
         code: String,
@@ -60,6 +59,14 @@ const userSchema = new Schema(
       default: "offline",
     },
     isLoggedIn: {
+      type: Boolean,
+      default: false,
+    },
+    isActivated: {
+      type: Boolean,
+      default: false,
+    },
+    isConfirmed: {
       type: Boolean,
       default: false,
     },

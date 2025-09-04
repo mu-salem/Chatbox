@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { asyncHandler } from "../../utils/error handling/asynchandler.js";
-import { validation } from "../../middleware/validation.middleware.js";
 import * as service from "./auth.service.js";
 import * as schema from "./auth.validation.js";
+import { validation } from "../../middleware/validation.middleware.js";
 
 const router = Router();
 
@@ -46,6 +46,16 @@ router.post(
   "/login-with-google",
   validation(schema.googleAuth),
   asyncHandler(service.signupOrLoginWithGoogle)
+);
+
+/** 
+ * @route   POST /auth/sendForgetPasswordCode
+ * @desc    Send OTP for forget password
+ */
+router.post(
+    "/send-forget-password-code",
+    validation(schema.sendForgetPasswordCode),
+    asyncHandler(service.sendForgetPasswordCode)
 );
 
 /**

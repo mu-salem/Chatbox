@@ -2,7 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../../utils/error handling/asynchandler.js";
 import { validation } from "../../middleware/validation.middleware.js";
 import { isAuthenticated } from "../../middleware/authentication.middleware.js";
-import { uploadCloud, fileValidation } from "../../utils/file uploading/multerCloud.js";
+import { uploadCloud } from "../../utils/file uploading/multerCloud.js";
 import * as service from "./user.service.js";
 import * as schema from "./user.validation.js";
 
@@ -11,7 +11,6 @@ const router = Router();
 /**
  * @route   GET /user/profile
  * @desc    Get current user profile
- 
  */
 router.get(
   "/profile",
@@ -38,8 +37,8 @@ router.patch(
 router.patch(
   "/update-password",
   isAuthenticated,
-  validation(userScheme.updatePassword),
-  asyncHandler(userService.updatePassword)
+  validation(schema.updatePassword),
+  asyncHandler(service.updatePassword)
 );
 
 /**
@@ -61,7 +60,7 @@ router.patch(
 router.get(
   "/name/:name",
   isAuthenticated,
-  validation(schema.getUserByName), 
+  validation(schema.getUserByName),
   asyncHandler(service.getUserByName)
 );
 
