@@ -44,7 +44,7 @@ export const confirmOTP = async (req, res, next) => {
 
   if (!otpRecord) {
 
-    const newOTP = generateOTP();
+    const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
     const hashedOTP = hash({ plainText: newOTP });
 
     user.OTP = user.OTP.filter((otp) => otp.type !== type); 
