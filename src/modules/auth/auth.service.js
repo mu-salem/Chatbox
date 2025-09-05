@@ -8,6 +8,7 @@ import e from "express";
 
 export const signup = async (req, res, next) => {
   const { email } = req.body;
+  
   const isUser = await User.findOne({ email });
 
   if (isUser) return next(new Error("User already exists!"), { cause: 400 });
