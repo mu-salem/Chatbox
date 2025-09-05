@@ -46,26 +46,19 @@ export const confirmOTP = async (req, res, next) => {
     const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
     const hashedOTP = hash({ plainText: newOTP });
 
-    user.OTP = user.OTP.filter(otp => otp.type !== type);
+    user.OTP = user.OTP.filter((otp) => otp.type !== type);
 
     user.OTP.push({
       code: hashedOTP,
       type: type,
-      expiresIn: new Date(Date.now() + 10 * 60 * 1000),  
+      expiresIn: new Date(Date.now() + 10 * 60 * 1000),
     });
 
     await user.save();
 
-    let emailSubject;
-    switch (type) {
-      case OTP_TYPES.CONFIRM_EMAIL:
-        emailSubject = subjects.confirmEmail;
-        eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
-        break;
-      case OTP_TYPES.FORGET_PASSWORD:
-        emailSubject = subjects.forgetPassword;
-        eventEmitter.emit("sendForgetPasswordCode", email, newOTP, emailSubject);
-        break;
+    if (type === OTP_TYPES.CONFIRM_EMAIL) {
+      emailSubject = subjects.confirmEmail;
+      eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
     }
 
     return res.status(200).json({
@@ -154,6 +147,8 @@ export const sendForgetPasswordCode = async (req, res, next) => {
     charset: "numeric",
   });
 
+  user.OTP = user.OTP.filter((otp) => otp.type !== OTP_TYPES.FORGET_PASSWORD);
+
   user.OTP.push({
     code: hash({ plainText: code }),
     type: OTP_TYPES.FORGET_PASSWORD,
@@ -162,12 +157,7 @@ export const sendForgetPasswordCode = async (req, res, next) => {
 
   await user.save();
 
-  eventEmitter.emit(
-    "sendForgetPasswordCode",
-    email,
-    code,
-    subjects.forgetPassword
-  );
+  eventEmitter.emit("FORGOT_PASSWORD", email, code, subjects.forgetPassword);
 
   res.status(200).json({
     success: true,
@@ -203,7 +193,7 @@ export const forgetPassword = async (req, res, next) => {
 };
 
 export const resetPassword = async (req, res, next) => {
-  const { newPassword, confirmPassword } = req.body;
+  const { email, newPassword, confirmPassword } = req.body;
 
   const user = await User.findOne({ email });
   if (!user)
