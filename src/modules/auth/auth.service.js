@@ -34,51 +34,53 @@ export const signup = async (req, res, next) => {
 
 export const confirmOTP = async (req, res, next) => {
   const { email, otp, type } = req.body;
-
+  
   const user = await User.findOne({ email });
   if (!user) return next(new Error("User not found!"), { cause: 404 });
-
+  
   const otpRecord = user.OTP.find(
-    (otp) => otp.type === type && otp.expiresIn > new Date()
+    (otpItem) => otpItem.type === type && otpItem.expiresIn > new Date()
   );
-
+  
   if (!otpRecord) {
     const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
     const hashedOTP = hash({ plainText: newOTP });
-
-    user.OTP = user.OTP.filter((otp) => otp.type !== type);
-
+    
+    user.OTP = user.OTP.filter((otpItem) => otpItem.type !== type);
+    
     user.OTP.push({
       code: hashedOTP,
       type: type,
       expiresIn: new Date(Date.now() + 10 * 60 * 1000),
     });
-
+    
     await user.save();
-
+    
     let emailSubject;
     if (type === OTP_TYPES.CONFIRM_EMAIL) {
       emailSubject = subjects.signup;
       eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
     }
-
+    
     return res.status(200).json({
       success: true,
       message: "OTP has expired. New OTP has been sent to your email.",
     });
   }
-
+  
   if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
     return next(new Error("Invalid OTP!", { cause: 400 }));
   }
 
+  user.OTP = user.OTP.filter((otpItem) => otpItem.type !== type);
+  
   if (type === OTP_TYPES.CONFIRM_EMAIL) {
     user.isConfirmed = true;
     user.isActivated = true;
   }
-
+  
   await user.save();
-
+  
   return res.status(200).json({
     success: true,
     message: "OTP confirmed successfully.",
