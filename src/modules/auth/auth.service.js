@@ -43,7 +43,39 @@ export const confirmOTP = async (req, res, next) => {
   );
 
   if (!otpRecord) {
-    return next(new Error("Invalid or expired OTP!", { cause: 400 }));
+    const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
+    const hashedOTP = hash({ plainText: newOTP });
+
+    user.OTP = user.OTP.filter(otp => otp.type !== type);
+
+    user.OTP.push({
+      code: hashedOTP,
+      type: type,
+      expiresIn: new Date(Date.now() + 10 * 60 * 3),  
+    });
+
+    await user.save();
+
+    let emailSubject;
+    switch (type) {
+      case OTP_TYPES.SIGNUP:
+        emailSubject = subjects.signup;
+        eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
+        break;
+      case OTP_TYPES.CONFIRM_EMAIL:
+        emailSubject = subjects.confirmEmail;
+        eventEmitter.emit("CONFIRM_EMAIL", email, newOTP, emailSubject);
+        break;
+      case OTP_TYPES.FORGET_PASSWORD:
+        emailSubject = subjects.forgetPassword;
+        eventEmitter.emit("sendForgetPasswordCode", email, newOTP, emailSubject);
+        break;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP has expired. New OTP has been sent to your email.",
+    });
   }
 
   if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
