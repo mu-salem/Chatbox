@@ -51,13 +51,17 @@ export const confirmOTP = async (req, res, next) => {
     user.OTP.push({
       code: hashedOTP,
       type: type,
-      expiresIn: new Date(Date.now() + 10 * 60 * 3),  
+      expiresIn: new Date(Date.now() + 10 * 60 * 1000),  
     });
 
     await user.save();
 
     let emailSubject;
     switch (type) {
+      case OTP_TYPES.SIGNUP:
+        emailSubject = subjects.signup;
+        eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
+        break;
       case OTP_TYPES.CONFIRM_EMAIL:
         emailSubject = subjects.confirmEmail;
         eventEmitter.emit("CONFIRM_EMAIL", email, newOTP, emailSubject);
