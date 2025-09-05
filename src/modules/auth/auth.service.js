@@ -37,17 +37,39 @@ export const confirmOTP = async (req, res, next) => {
   const { email, otp, type } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("User not found!"), { cause: 404 });
+  if (!user) return next(new Error("User not found!", { cause: 404 }));
 
+  const now = new Date();
   const otpRecord = user.OTP.find(
-    (otp) => otp.type === type && otp.expiresIn > new Date()
+    (record) => record.type === type && record.expiresIn > now
   );
 
   if (!otpRecord) {
-    return next(new Error("Invalid or expired OTP!", { cause: 400 }));
+    const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
+    const hashedOTP = hash({ plainText: newOTP });
+
+    user.OTP = user.OTP.filter((record) => record.type !== type);
+
+    user.OTP.push({
+      code: hashedOTP,
+      type: type,
+      expiresIn: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await user.save();
+
+    if (type === OTP_TYPES.CONFIRM_EMAIL) {
+      eventEmitter.emit("SIGNUP", email, newOTP, subjects.confirmEmail);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP has expired. New OTP has been sent to your email.",
+    });
   }
 
-  if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
+  const isMatch = compareHash({ plainText: otp, hash: otpRecord.code });
+  if (!isMatch) {
     return next(new Error("Invalid OTP!", { cause: 400 }));
   }
 
@@ -56,11 +78,20 @@ export const confirmOTP = async (req, res, next) => {
     user.isActivated = true;
   }
 
+  user.OTP = user.OTP.filter((record) => record.type !== type);
   await user.save();
 
   return res.status(200).json({
     success: true,
     message: "OTP confirmed successfully.",
+    access_token: generateToken({
+      payload: { id: user._id, email: user.email },
+      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
+    }),
+    refresh_token: generateToken({
+      payload: { id: user._id, email: user.email },
+      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE },
+    }),
   });
 };
 
@@ -109,6 +140,8 @@ export const sendForgetPasswordCode = async (req, res, next) => {
     charset: "numeric",
   });
 
+  user.OTP = user.OTP.filter((otp) => otp.type !== OTP_TYPES.FORGET_PASSWORD);
+
   user.OTP.push({
     code: hash({ plainText: code }),
     type: OTP_TYPES.FORGET_PASSWORD,
@@ -117,12 +150,7 @@ export const sendForgetPasswordCode = async (req, res, next) => {
 
   await user.save();
 
-  eventEmitter.emit(
-    "sendForgetPasswordCode",
-    email,
-    code,
-    subjects.forgetPassword
-  );
+  eventEmitter.emit("FORGOT_PASSWORD", email, code, subjects.forgetPassword);
 
   res.status(200).json({
     success: true,
@@ -132,6 +160,8 @@ export const sendForgetPasswordCode = async (req, res, next) => {
 
 export const forgetPassword = async (req, res, next) => {
   const { email, code } = req.body;
+
+  console.log(email, code);
 
   const user = await User.findOne({ email });
   if (!user)
@@ -158,7 +188,7 @@ export const forgetPassword = async (req, res, next) => {
 };
 
 export const resetPassword = async (req, res, next) => {
-  const { newPassword, confirmPassword } = req.body;
+  const { email, newPassword, confirmPassword } = req.body;
 
   const user = await User.findOne({ email });
   if (!user)
@@ -169,9 +199,7 @@ export const resetPassword = async (req, res, next) => {
   if (newPassword !== confirmPassword)
     return next(new Error("Passwords do not match!", { cause: 400 }));
 
-  const hashedPassword = hash({ plainText: newPassword });
-
-  user.password = hashedPassword;
+  user.password = newPassword;
   user.isLoggedIn = false;
   user.OTP = [];
   await user.save();

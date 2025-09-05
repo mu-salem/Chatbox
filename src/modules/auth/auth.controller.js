@@ -49,7 +49,7 @@ router.post(
 );
 
 /** 
- * @route   POST /auth/sendForgetPasswordCode
+ * @route   POST /auth/send-forget-password-code
  * @desc    Send OTP for forget password
  */
 router.post(
