@@ -85,9 +85,27 @@ export const confirmOTP = async (req, res, next) => {
 
   await user.save();
 
+  const access_token = generateToken({
+    payload: { id: user._id, email: user.email },
+    options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
+  });
+
+  const refresh_token = generateToken({
+    payload: { id: user._id, email: user.email },
+    options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE },
+  });
+
   return res.status(200).json({
     success: true,
     message: "OTP confirmed successfully.",
+    access_token: generateToken({
+      payload: { id: user._id, email: user.email },
+      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
+    }),
+    refresh_token: generateToken({
+      payload: { id: user._id, email: user.email },
+      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE },
+    }),
   });
 };
 
