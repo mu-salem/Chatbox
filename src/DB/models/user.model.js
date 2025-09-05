@@ -70,6 +70,9 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    changeCredentialTime: {
+      type: Date,
+    },
   },
   { timestamps: true, strictQuery: true }
 );

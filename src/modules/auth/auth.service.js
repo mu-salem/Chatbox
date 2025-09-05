@@ -160,8 +160,6 @@ export const sendForgetPasswordCode = async (req, res, next) => {
 export const forgetPassword = async (req, res, next) => {
   const { email, code } = req.body;
 
-  console.log(email, code);
-
   const user = await User.findOne({ email });
   if (!user)
     return next(new Error("User with this email does not exist!"), {
