@@ -56,8 +56,9 @@ export const confirmOTP = async (req, res, next) => {
 
     await user.save();
 
+    let emailSubject;
     if (type === OTP_TYPES.CONFIRM_EMAIL) {
-      emailSubject = subjects.confirmEmail;
+      emailSubject = subjects.signup;
       eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
     }
 
