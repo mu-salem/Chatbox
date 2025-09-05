@@ -58,10 +58,6 @@ export const confirmOTP = async (req, res, next) => {
 
     let emailSubject;
     switch (type) {
-      case OTP_TYPES.SIGNUP:
-        emailSubject = subjects.signup;
-        eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
-        break;
       case OTP_TYPES.CONFIRM_EMAIL:
         emailSubject = subjects.confirmEmail;
         eventEmitter.emit("CONFIRM_EMAIL", email, newOTP, emailSubject);
