@@ -30,11 +30,11 @@ export const sendForgetPasswordCode = joi.object({
 
 export const forgetPassword = joi.object({
     email: joi.string().email().required(),
-    otp: joi.string().length(6).required(),
-    newPassword: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+    code: joi.string().length(6).required(),
 });
 
 export const resetPassword = joi.object({
+    email: joi.string().email().required(),
     newPassword: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
     confirmPassword: joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
 });

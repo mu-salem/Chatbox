@@ -34,53 +34,52 @@ export const signup = async (req, res, next) => {
 
 export const confirmOTP = async (req, res, next) => {
   const { email, otp, type } = req.body;
-  
+
   const user = await User.findOne({ email });
-  if (!user) return next(new Error("User not found!"), { cause: 404 });
-  
+  if (!user) return next(new Error("User not found!", { cause: 404 }));
+
+  const now = new Date();
   const otpRecord = user.OTP.find(
-    (otpItem) => otpItem.type === type && otpItem.expiresIn > new Date()
+    (record) => record.type === type && record.expiresIn > now
   );
-  
+
   if (!otpRecord) {
     const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
     const hashedOTP = hash({ plainText: newOTP });
-    
-    user.OTP = user.OTP.filter((otpItem) => otpItem.type !== type);
-    
+
+    user.OTP = user.OTP.filter((record) => record.type !== type);
+
     user.OTP.push({
       code: hashedOTP,
       type: type,
       expiresIn: new Date(Date.now() + 10 * 60 * 1000),
     });
-    
+
     await user.save();
-    
-    let emailSubject;
+
     if (type === OTP_TYPES.CONFIRM_EMAIL) {
-      emailSubject = subjects.signup;
-      eventEmitter.emit("SIGNUP", email, newOTP, emailSubject);
+      eventEmitter.emit("SIGNUP", email, newOTP, subjects.confirmEmail);
     }
-    
+
     return res.status(200).json({
       success: true,
       message: "OTP has expired. New OTP has been sent to your email.",
     });
   }
-  
-  if (!compareHash({ plainText: otp, hash: otpRecord.code })) {
+
+  const isMatch = compareHash({ plainText: otp, hash: otpRecord.code });
+  if (!isMatch) {
     return next(new Error("Invalid OTP!", { cause: 400 }));
   }
 
-  user.OTP = user.OTP.filter((otpItem) => otpItem.type !== type);
-  
   if (type === OTP_TYPES.CONFIRM_EMAIL) {
     user.isConfirmed = true;
     user.isActivated = true;
   }
-  
+
+  user.OTP = user.OTP.filter((record) => record.type !== type);
   await user.save();
-  
+
   return res.status(200).json({
     success: true,
     message: "OTP confirmed successfully.",
@@ -161,6 +160,8 @@ export const sendForgetPasswordCode = async (req, res, next) => {
 export const forgetPassword = async (req, res, next) => {
   const { email, code } = req.body;
 
+  console.log(email, code);
+
   const user = await User.findOne({ email });
   if (!user)
     return next(new Error("User with this email does not exist!"), {
@@ -197,9 +198,7 @@ export const resetPassword = async (req, res, next) => {
   if (newPassword !== confirmPassword)
     return next(new Error("Passwords do not match!", { cause: 400 }));
 
-  const hashedPassword = hash({ plainText: newPassword });
-
-  user.password = hashedPassword;
+  user.password = newPassword;
   user.isLoggedIn = false;
   user.OTP = [];
   await user.save();
