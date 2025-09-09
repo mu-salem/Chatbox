@@ -43,7 +43,7 @@ const userSchema = new Schema(
       secure_url: { type: String, default: defaultSecureURL_profilePic },
       public_id: { type: String, default: defaultPublicID_profilePic },
     },
-    contacts: [{ type: Types.ObjectId, ref: "User" }],
+    friends: [{ type: Types.ObjectId, ref: "User" }],
     groups: [{ type: Types.ObjectId, ref: "Group" }],
     stories: [{ type: Types.ObjectId, ref: "Story" }],
     OTP: [

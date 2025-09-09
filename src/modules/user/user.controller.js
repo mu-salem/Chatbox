@@ -54,59 +54,57 @@ router.patch(
 );
 
 /**
- * @route   GET /user/name/:name
+ * @route   GET /user/username/:username
  * @desc    Get user by name
  */
 router.get(
-  "/name/:name",
-  isAuthenticated,
+  "/username/:username",
   validation(schema.getUserByName),
   asyncHandler(service.getUserByName)
 );
 
 /**
- * @route   GET /user/search
+ * @route   GET /user/search?search=VALUE
  * @desc    Search users
  */
 router.get(
   "/search",
-  isAuthenticated,
   validation(schema.searchUsers),
   asyncHandler(service.searchUsers)
 );
 
 /**
- * @route   POST /user/:id/add-contact
- * @desc    Add user to contacts
+ * @route   POST /user/:username/add-friend
+ * @desc    Add user to friends
  */
 router.post(
-  "/:id/add-contact",
+  "/:username/add-friend",
   isAuthenticated,
-  validation(schema.addContact),
-  asyncHandler(service.addContact)
+  validation(schema.addFriend),
+  asyncHandler(service.addFriend)
 );
 
 /**
- * @route   DELETE /user/:id/remove-contact
- * @desc    Remove user from contacts
+ * @route   DELETE /user/:id/remove-friend
+ * @desc    Remove user from friends
  */
 router.delete(
-  "/:id/remove-contact",
+  "/:id/remove-friend",
   isAuthenticated,
-  validation(schema.removeContact),
-  asyncHandler(service.removeContact)
+  validation(schema.removeFriend),
+  asyncHandler(service.removeFriend)
 );
 
 /**
- * @route   GET /user/contacts
- * @desc    Get user contacts
+ * @route   GET /user/friends
+ * @desc    Get user friends list
  
  */
 router.get(
-  "/contacts",
+  "/friends",
   isAuthenticated,
-  validation(schema.getContacts),
-  asyncHandler(service.getContacts)
+  validation(schema.getFriends),
+  asyncHandler(service.getFriends)
 );
 
 export default router;

@@ -1,4 +1,6 @@
 import User from "../../DB/models/user.model.js";
+import cloudinary from "../../utils/file uploading/cloudinary.config.js";
+import { compareHash } from "../../utils/hashing/hash.js";
 
 export const getLoginUserProfile = async (req, res, next) => {
   const user = await User.findOne({
@@ -34,7 +36,6 @@ export const updatePassword = async (req, res, next) => {
     return next(new Error("Old password is incorrect!"), { cause: 400 });
 
   user.password = newPassword;
-  user.isLoggedIn = false;
   await user.save();
 
   return res.status(200).json({
@@ -78,9 +79,9 @@ export const updateProfilePic = async (req, res, next) => {
 };
 
 export const getUserByName = async (req, res, next) => {
-  const { name } = req.params;
+  const { username } = req.params;
 
-  const user = await User.findOne({ name }).select(
+  const user = await User.findOne({ username }).select(
     "-password -OTP -__v -provider"
   );
 
@@ -90,9 +91,9 @@ export const getUserByName = async (req, res, next) => {
 };
 
 export const searchUsers = async (req, res, next) => {
-  const { search } = req.query;
+  const { username } = req.query;
 
-  if (!search || search.trim() === "") {
+  if (!username || username.trim() === "") {
     return res.status(400).json({
       success: false,
       message: "Search query is required",
@@ -100,11 +101,7 @@ export const searchUsers = async (req, res, next) => {
   }
 
   const users = await User.find({
-    $or: [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
-      { phoneNumber: { $regex: search, $options: "i" } },
-    ],
+    username: { $regex: `^${username}`, $options: "i" }
   }).select("-password -OTP -__v -provider");
 
   return res.json({
@@ -114,23 +111,31 @@ export const searchUsers = async (req, res, next) => {
   });
 };
 
-export const addContact = async (req, res, next) => {
+
+export const addFriend = async (req, res, next) => {
   const userId = req.user._id;
-  const { id } = req.params;
+  const { username } = req.params; 
+
   const user = await User.findById(userId);
   if (!user) return next(new Error("User not found!"), { cause: 404 });
-  if (user.contacts.includes(id))
-    return next(new Error("User already added to contacts!"), { cause: 400 });
-  user.contacts.push(id);
+
+  const friend = await User.findOne({ username });
+  if (!friend) return next(new Error("User with this username not found!"), { cause: 404 });
+
+  if (user.friends.includes(friend._id))
+    return next(new Error("User already added to friends!"), { cause: 400 });
+
+  user.friends.push(friend._id);
   await user.save();
+
   return res.json({
     success: true,
-    message: "User added to contacts!",
-    results: { contacts: user.contacts },
+    message: "User added to friends!",
+    results: { friends: user.friends },
   });
 };
 
-export const removeContact = async (req, res, next) => {
+export const removeFriend = async (req, res, next) => {
   const userId = req.user._id;
   const { id } = req.params;
   const user = await User.findById(userId);
@@ -151,7 +156,7 @@ export const removeContact = async (req, res, next) => {
   });
 };
 
-export const getContacts = async (req, res, next) => {
+export const getFriends = async (req, res, next) => {
   const userId = req.user._id;
   const user = await User.findById(userId).populate(
     "contacts",

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { asyncHandler } from "../../utils/error handling/asynchandler.js";
 import { validation } from "../../middleware/validation.middleware.js";
 import { isAuthenticated } from "../../middleware/authentication.middleware.js";
-import { uploadCloud, fileValidation } from "../../utils/file uploading/multerCloud.js";
+import { uploadCloud } from "../../utils/file uploading/multerCloud.js";
 import * as service from "./group.service.js";
 import * as schema from "./group.validation.js";
 
@@ -16,7 +16,7 @@ const router = Router();
 router.post(
   "/",
   isAuthenticated,
-  uploadCloud(fileValidation.image).single("groupPic"),
+  uploadCloud().single("groupPic"),
   validation(schema.createGroup),
   asyncHandler(service.createGroup)
 );
