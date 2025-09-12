@@ -136,32 +136,9 @@ export const addFriend = async (req, res, next) => {
 };
 
 export const removeFriend = async (req, res, next) => {
-  const userId = req.user._id;
-  const { id } = req.params;
-  const user = await User.findById(userId);
-
-  if (!user) return next(new Error("User not found!"), { cause: 404 });
-
-  if (!user.contacts.includes(id))
-    return next(new Error("User not found in contacts!"), { cause: 404 });
-
-  user.contacts = user.contacts.filter((contact) => contact.toString() !== id);
-
-  await user.save();
-
-  return res.json({
-    success: true,
-    message: "User removed from contacts!",
-    results: { contacts: user.contacts },
-  });
+  
 };
 
 export const getFriends = async (req, res, next) => {
-  const userId = req.user._id;
-  const user = await User.findById(userId).populate(
-    "contacts",
-    "-password -OTP -__v -provider"
-  );
-  if (!user) return next(new Error("User not found!"), { cause: 404 });
-  return res.json({ success: true, results: { contacts: user.contacts } });
+  
 };

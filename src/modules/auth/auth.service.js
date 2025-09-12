@@ -4,11 +4,10 @@ import { eventEmitter } from "./../../utils/emails/email.event.js";
 import { compareHash, hash } from "../../utils/hashing/hash.js";
 import { generateToken, verifyToken } from "../../utils/token/token.js";
 import { OTP_TYPES, subjects } from "../../utils/constants/subjects.js";
-import e from "express";
 
-export const signup = async (req, res, next) => {
+export const register = async (req, res, next) => {
   const { email } = req.body;
-  
+
   const isUser = await User.findOne({ email });
 
   if (isUser) return next(new Error("User already exists!"), { cause: 400 });
@@ -20,7 +19,8 @@ export const signup = async (req, res, next) => {
 
   const user = await User.create({
     ...req.body,
-    isActivated: false,
+    isActivated: true,
+    isLoggedIn: true,
     OTP: [
       {
         code: hashedOTP,
@@ -30,72 +30,16 @@ export const signup = async (req, res, next) => {
     ],
   });
 
-  return res.json({ success: true, message: "User created successfully!" });
-};
-
-export const confirmOTP = async (req, res, next) => {
-  const { email, otp, type } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) return next(new Error("User not found!", { cause: 404 }));
-
-  const now = new Date();
-  const otpRecord = user.OTP.find(
-    (record) => record.type === type && record.expiresIn > now
-  );
-
-  if (!otpRecord) {
-    const newOTP = randomstring.generate({ length: 6, charset: "numeric" });
-    const hashedOTP = hash({ plainText: newOTP });
-
-    user.OTP = user.OTP.filter((record) => record.type !== type);
-
-    user.OTP.push({
-      code: hashedOTP,
-      type: type,
-      expiresIn: new Date(Date.now() + 10 * 60 * 1000),
-    });
-
-    await user.save();
-
-    if (type === OTP_TYPES.CONFIRM_EMAIL) {
-      eventEmitter.emit("SIGNUP", email, newOTP, subjects.confirmEmail);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP has expired. New OTP has been sent to your email.",
-    });
-  }
-
-  const isMatch = compareHash({ plainText: otp, hash: otpRecord.code });
-  if (!isMatch) {
-    return next(new Error("Invalid OTP!", { cause: 400 }));
-  }
-
-  if (type === OTP_TYPES.CONFIRM_EMAIL) {
-    user.isConfirmed = true;
-    user.isActivated = true;
-  }
-
-  user.OTP = user.OTP.filter((record) => record.type !== type);
-  await user.save();
-
-  return res.status(200).json({
+  return res.json({
     success: true,
-    message: "OTP confirmed successfully.",
-    access_token: generateToken({
+    message: "User created successfully!",
+    Token: generateToken({
       payload: { id: user._id, email: user.email },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
-    }),
-    refresh_token: generateToken({
-      payload: { id: user._id, email: user.email },
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE },
     }),
   });
 };
 
-export const signin = async (req, res, next) => {
+export const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   let user = await User.findOne({ email });
@@ -113,13 +57,9 @@ export const signin = async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
-    access_token: generateToken({
+    message: "Logged in successfully",
+    Token: generateToken({
       payload: { id: user._id, email: user.email },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
-    }),
-    refresh_token: generateToken({
-      payload: { id: user._id, email: user.email },
-      options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE },
     }),
   });
 };
@@ -158,7 +98,7 @@ export const sendForgetPasswordCode = async (req, res, next) => {
   });
 };
 
-export const forgetPassword = async (req, res, next) => {
+export const verifyForgetPasswordCode = async (req, res, next) => {
   const { email, code } = req.body;
 
   const user = await User.findOne({ email });
@@ -205,31 +145,5 @@ export const resetPassword = async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Password reset successfully",
-  });
-};
-
-export const refreshToken = async (req, res, next) => {
-  const { refreshToken } = req.body;
-
-  const payload = verifyToken({ token: refreshToken });
-  if (!payload)
-    return next(new Error("Invalid refresh token!", { cause: 401 }));
-
-  const user = await User.findById(payload.id);
-  if (!user) return next(new Error("User not found!", { cause: 404 }));
-
-  const tokenIssuedAt = new Date(payload.iat * 1000);
-  if (user.changeCredentialTime && user.changeCredentialTime > tokenIssuedAt) {
-    return next(
-      new Error("Token expired, please login again!", { cause: 401 })
-    );
-  }
-
-  return res.status(200).json({
-    success: true,
-    access_token: generateToken({
-      payload: { id: user._id, email: user.email },
-      options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE },
-    }),
   });
 };

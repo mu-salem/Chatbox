@@ -6,7 +6,7 @@ const messageSchema = new Schema(
     chat: { type: Types.ObjectId, ref: "Chat", required: true },
     type: {
       type: String,
-      enum: ["text", "image", "voice", "video", "location", "contact", "document", "poll", "call"],
+      enum: ["text", "image", "voice", "video", "location", "contact", "document", "call"],
       default: "text",
     },
     content: String,
@@ -21,10 +21,6 @@ const messageSchema = new Schema(
     contact: {
       name: String,
       phone: String,
-    },
-    poll: {
-      question: String,
-      options: [{ text: String, votes: [{ type: Types.ObjectId, ref: "User" }] }],
     },
     call: {
       callType: { type: String, enum: ["voice", "video"] },
