@@ -12,22 +12,10 @@ export const register = async (req, res, next) => {
 
   if (isUser) return next(new Error("User already exists!"), { cause: 400 });
 
-  const OTP = randomstring.generate({ length: 6, charset: "numeric" });
-  eventEmitter.emit("SIGNUP", email, OTP, subjects.signup);
-
-  const hashedOTP = hash({ plainText: OTP });
-
   const user = await User.create({
     ...req.body,
     isActivated: true,
     isLoggedIn: true,
-    OTP: [
-      {
-        code: hashedOTP,
-        type: OTP_TYPES.SIGNUP,
-        expiresIn: new Date(Date.now() + 10 * 60 * 1000),
-      },
-    ],
   });
 
   return res.json({
