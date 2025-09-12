@@ -85,11 +85,11 @@ router.post(
 );
 
 /**
- * @route   DELETE /user/:id/remove-friend
+ * @route   DELETE /user/:username/remove-friend
  * @desc    Remove user from friends
  */
 router.delete(
-  "/:id/remove-friend",
+  "/:username/remove-friend",
   isAuthenticated,
   validation(schema.removeFriend),
   asyncHandler(service.removeFriend)
@@ -98,12 +98,10 @@ router.delete(
 /**
  * @route   GET /user/friends
  * @desc    Get user friends list
- 
  */
 router.get(
   "/friends",
   isAuthenticated,
-  validation(schema.getFriends),
   asyncHandler(service.getFriends)
 );
 

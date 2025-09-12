@@ -39,6 +39,23 @@ const userSchema = new Schema(
     address: {
       type: String,
     },
+    bio: {
+      type: String,
+      default: "Hi I'm here.",
+      maxlength: 160,
+      trim: true,
+    },
+    mediaShared: {
+      images: [{ type: Types.ObjectId, ref: "Message" }],
+      videos: [{ type: Types.ObjectId, ref: "Message" }],
+      voices: [{ type: Types.ObjectId, ref: "Message" }],
+      documents: [{ type: Types.ObjectId, ref: "Message" }],
+    },
+    firstLetter: {
+      type: String,
+      maxlength: 1,
+      trim: true,
+    },
     profilePic: {
       secure_url: { type: String, default: defaultSecureURL_profilePic },
       public_id: { type: String, default: defaultPublicID_profilePic },
@@ -84,6 +101,9 @@ userSchema.pre("save", async function (next) {
   }
   if (this.isModified("phoneNumber")) {
     this.phoneNumber = encrypt({ plainText: this.phoneNumber });
+  }
+  if (this.isModified("username")) {
+    this.firstLetter = this.username.charAt(0).toUpperCase();
   }
   next();
 });

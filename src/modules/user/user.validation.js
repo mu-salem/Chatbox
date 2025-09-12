@@ -3,18 +3,22 @@ import { isValidObjectId } from "../../middleware/validation.middleware.js";
 
 export const updateProfile = joi
   .object({
-    username: joi.string().min(3).max(30),
-    phoneNumber: joi.string(),
-    address: joi.string().max(100),
+    username: joi.string().min(3).max(30).optional(),
+    phoneNumber: joi.string().optional(),
+    address: joi.string().max(100).optional(),
+    bio: joi.string().max(160).optional(),
   })
-  .required();
+  .optional();
 
 export const updatePassword = joi
   .object({
-    oldPassword: joi.string().required(),
+    oldPassword: joi
+      .string()
+      .pattern(new RegExp("^[a-zA-Z0-9]{8,30}$"))
+      .required(),
     newPassword: joi
       .string()
-      .pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
+      .pattern(new RegExp("^[a-zA-Z0-9]{8,30}$"))
       .required(),
   })
   .required();
@@ -53,12 +57,12 @@ export const searchUsers = joi
 
 export const addFriend = joi
   .object({
-    id: joi.custom(isValidObjectId).required(),
+    username: joi.string().min(3).max(30).required(),
   })
   .required();
 
 export const removeFriend = joi
   .object({
-    id: joi.custom(isValidObjectId).required(),
+    username: joi.string().min(3).max(30).required(),
   })
   .required();

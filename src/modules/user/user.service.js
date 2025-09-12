@@ -101,7 +101,7 @@ export const searchUsers = async (req, res, next) => {
   }
 
   const users = await User.find({
-    username: { $regex: `^${username}`, $options: "i" }
+    username: { $regex: `^${username}`, $options: "i" },
   }).select("-password -OTP -__v -provider");
 
   return res.json({
@@ -111,16 +111,18 @@ export const searchUsers = async (req, res, next) => {
   });
 };
 
-
 export const addFriend = async (req, res, next) => {
   const userId = req.user._id;
-  const { username } = req.params; 
+  const { username } = req.params;
 
   const user = await User.findById(userId);
   if (!user) return next(new Error("User not found!"), { cause: 404 });
 
   const friend = await User.findOne({ username });
-  if (!friend) return next(new Error("User with this username not found!"), { cause: 404 });
+  if (!friend)
+    return next(new Error("User with this username not found!"), {
+      cause: 404,
+    });
 
   if (user.friends.includes(friend._id))
     return next(new Error("User already added to friends!"), { cause: 400 });
@@ -136,9 +138,57 @@ export const addFriend = async (req, res, next) => {
 };
 
 export const removeFriend = async (req, res, next) => {
-  
+  const userId = req.user._id;
+  const { username } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) return next(new Error("User not found!"), { cause: 404 });
+
+  const friend = await User.findOne({ username });
+  if (!friend)
+    return next(new Error("User with this username not found!"), {
+      cause: 404,
+    });
+
+  if (!user.friends.includes(friend._id))
+    return next(new Error("User not found in friends!"), { cause: 404 });
+
+  user.friends = user.friends.filter(
+    (f) => f.toString() !== friend._id.toString()
+  );
+
+  await user.save();
+
+  return res.json({
+    success: true,
+    message: "User removed from friends!",
+    results: { friends: user.friends },
+  });
 };
 
 export const getFriends = async (req, res, next) => {
-  
+  const userId = req.user._id;
+  const user = await User.findById(userId).populate(
+    "friends",
+    "username firstLetter profilePic bio status"
+  );
+
+  if (!user) return next(new Error("User not found!"), { cause: 404 });
+
+  const grouped = {};
+
+  user.friends.forEach((friend) => {
+    const letter = friend.firstLetter ? friend.firstLetter.toUpperCase() : "#";
+
+    if (!grouped[letter]) {
+      grouped[letter] = [];
+    }
+
+    grouped[letter].push(friend);
+  });
+
+  return res.json({
+    success: true,
+    results: { friends: grouped },
+  });
 };
