@@ -35,6 +35,7 @@ const userSchema = new Schema(
     },
     phoneNumber: {
       type: String,
+      unique: true,
     },
     address: {
       type: String,
