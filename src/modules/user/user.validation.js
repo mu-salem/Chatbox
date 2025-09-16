@@ -60,7 +60,20 @@ export const searchUsers = joi
   })
   .required();
 
-export const addFriend = joi
+export const sendFriendRequest = joi
+  .object({
+    username: joi.string().min(3).max(30).required(),
+  })
+  .required();
+
+export const handleFriendRequest = joi
+  .object({
+    username: joi.string().min(3).max(30).required(),
+    action: joi.string().valid("accept", "reject").required(),
+  })
+  .required();
+
+export const rejectFriend = joi
   .object({
     username: joi.string().min(3).max(30).required(),
   })

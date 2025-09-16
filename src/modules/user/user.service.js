@@ -2,7 +2,6 @@ import User from "../../DB/models/user.model.js";
 import cloudinary from "../../utils/file uploading/cloudinary.config.js";
 import { compareHash } from "../../utils/hashing/hash.js";
 
-
 export const getLoginUserProfile = async (req, res, next) => {
   const user = await User.findOne({
     _id: req.user._id,
@@ -14,7 +13,6 @@ export const getLoginUserProfile = async (req, res, next) => {
   if (!user) return next(new Error("User not found!"), { cause: 404 });
   return res.json({ success: true, results: { user } });
 };
-
 
 export const getUserProfile = async (req, res, next) => {
   const { username } = req.params;
@@ -152,40 +150,55 @@ export const sendFriendRequest = async (req, res, next) => {
     message: "Friend request sent!",
   });
 };
-
-
-export const acceptFriendRequest = async (req, res, next) => {
+export const handleFriendRequest = async (req, res, next) => {
   const userId = req.user._id;
-  const { username } = req.body;
+  const { username, action } = req.body;
 
   const receiver = await User.findById(userId);
   const sender = await User.findOne({ username });
 
   if (!sender) return next(new Error("User not found!"), { cause: 404 });
-
-  if (!receiver.friendRequests.includes(sender._id))
+  
+  if (!receiver.friendRequests.includes(sender._id)) {
     return next(new Error("No friend request from this user!"), { cause: 400 });
+  }
 
-  receiver.friendRequests = receiver.friendRequests.filter(
-    (id) => id.toString() !== sender._id.toString()
-  );
+  if (action === "accept") {
+    receiver.friendRequests = receiver.friendRequests.filter(
+      (id) => id.toString() !== sender._id.toString()
+    );
+    receiver.friends.push(sender._id);
+    sender.friends.push(receiver._id);
 
-  receiver.friends.push(sender._id);
-  sender.friends.push(receiver._id);
+    await receiver.save();
+    await sender.save();
 
-  await receiver.save();
-  await sender.save();
+    return res.json({
+      success: true,
+      message: "Friend request accepted!",
+    });
+  }
 
-  return res.json({
-    success: true,
-    message: "Friend request accepted!",
+  if (action === "reject") {
+    receiver.friendRequests = receiver.friendRequests.filter(
+      (id) => id.toString() !== sender._id.toString()
+    );
+    await receiver.save();
+
+    return res.json({
+      success: true,
+      message: "Friend request rejected!",
+    });
+  }
+
+  return next(new Error("Invalid action! Use 'accept' or 'reject'"), {
+    cause: 400,
   });
 };
 
-
 export const removeFriend = async (req, res, next) => {
   const userId = req.user._id;
-  const { username } = req.body; 
+  const { username } = req.body;
 
   const user = await User.findById(userId);
   if (!user) return next(new Error("User not found!"), { cause: 404 });
@@ -211,7 +224,6 @@ export const removeFriend = async (req, res, next) => {
     results: { friends: user.friends },
   });
 };
-
 
 export const getFriends = async (req, res, next) => {
   const userId = req.user._id;

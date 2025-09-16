@@ -84,14 +84,25 @@ router.get(
 );
 
 /**
- * @route   POST /user/add-friend
- * @desc    Add user to friends
+ * @route   POST /user/send-friend-request
+ * @desc    Send a friend request to another user
  */
 router.post(
-  "/add-friend",
+  "/send-friend-request",
   isAuthenticated,
-  validation(schema.addFriend),
-  asyncHandler(service.addFriend)
+  validation(schema.sendFriendRequest),
+  asyncHandler(service.sendFriendRequest)
+);
+
+/**
+ * @route   POST /user/handle-friend-request
+ * @desc    Accept or reject friend request
+ */
+router.post(
+  "/handle-friend-request",
+  isAuthenticated,
+  validation(schema.handleFriendRequest),
+  asyncHandler(service.handleFriendRequest)
 );
 
 /**
