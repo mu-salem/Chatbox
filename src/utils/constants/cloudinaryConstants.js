@@ -1,3 +1,3 @@
 export const defaultSecureURL_profilePic =
-  "https://res.cloudinary.com/dipu76hic/image/upload/v1738880254/SOCIAL/Default%20Data/qscn0dyjgyza3e5hg2f0.jpg";
-export const defaultPublicID_profilePic = "SOCIAL/Default Data/qscn0dyjgyza3e5hg2f0";
+  "https://res.cloudinary.com/dahnhk5h1/image/upload/v1758049108/default_avatar_icon_d6bhyc.png";
+export const defaultPublicID_profilePic = "Chatbox/Default Data/default_avatar_icon_d6bhyc";

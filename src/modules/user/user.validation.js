@@ -1,5 +1,10 @@
 import joi from "joi";
-import { isValidObjectId } from "../../middleware/validation.middleware.js";
+
+export const getUserProfile = joi
+  .object({
+    username: joi.string().min(3).max(30).required(),
+  })
+  .required();
 
 export const updateProfile = joi
   .object({

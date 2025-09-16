@@ -8,6 +8,7 @@ import * as schema from "./user.validation.js";
 
 const router = Router();
 
+
 /**
  * @route   GET /user/profile
  * @desc    Get current user profile
@@ -16,6 +17,15 @@ router.get(
   "/profile",
   isAuthenticated,
   asyncHandler(service.getLoginUserProfile)
+);
+
+/**
+ * @route   GET /user/profile/:username
+ * @desc    Get User Profile by username
+ */
+router.get(
+  "/profile/:username",
+  asyncHandler(service.getUserProfile)
 );
 
 /**
@@ -74,22 +84,22 @@ router.get(
 );
 
 /**
- * @route   POST /user/:username/add-friend
+ * @route   POST /user/add-friend
  * @desc    Add user to friends
  */
 router.post(
-  "/:username/add-friend",
+  "/add-friend",
   isAuthenticated,
   validation(schema.addFriend),
   asyncHandler(service.addFriend)
 );
 
 /**
- * @route   DELETE /user/:username/remove-friend
+ * @route   DELETE /user/remove-friend
  * @desc    Remove user from friends
  */
 router.delete(
-  "/:username/remove-friend",
+  "/remove-friend",
   isAuthenticated,
   validation(schema.removeFriend),
   asyncHandler(service.removeFriend)

@@ -61,6 +61,7 @@ const userSchema = new Schema(
       public_id: { type: String, default: defaultPublicID_profilePic },
     },
     friends: [{ type: Types.ObjectId, ref: "User" }],
+    friendRequests: [{ type: Types.ObjectId, ref: "User" }], 
     groups: [{ type: Types.ObjectId, ref: "Group" }],
     stories: [{ type: Types.ObjectId, ref: "Story" }],
     OTP: [
@@ -99,20 +100,10 @@ userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     this.password = hash({ plainText: this.password });
   }
-  if (this.isModified("phoneNumber")) {
-    this.phoneNumber = encrypt({ plainText: this.phoneNumber });
-  }
   if (this.isModified("username")) {
     this.firstLetter = this.username.charAt(0).toUpperCase();
   }
   next();
-});
-
-// Decrypt
-userSchema.post("init", function (doc) {
-  if (doc.phoneNumber) {
-    doc.phoneNumber = dncrypt({ cipherText: doc.phoneNumber });
-  }
 });
 
 const User = model("User", userSchema);

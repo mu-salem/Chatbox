@@ -2,13 +2,29 @@ import User from "../../DB/models/user.model.js";
 import cloudinary from "../../utils/file uploading/cloudinary.config.js";
 import { compareHash } from "../../utils/hashing/hash.js";
 
+
 export const getLoginUserProfile = async (req, res, next) => {
   const user = await User.findOne({
     _id: req.user._id,
     isLoggedIn: true,
   }).select("-password -OTP -__v -provider");
 
+  console.log(user);
+
   if (!user) return next(new Error("User not found!"), { cause: 404 });
+  return res.json({ success: true, results: { user } });
+};
+
+
+export const getUserProfile = async (req, res, next) => {
+  const { username } = req.params;
+
+  const user = await User.findOne({ username }).select(
+    "username address email phoneNumber profilePic bio status -_id"
+  );
+
+  if (!user) return next(new Error("User not found!"), { cause: 404 });
+
   return res.json({ success: true, results: { user } });
 };
 
@@ -111,35 +127,65 @@ export const searchUsers = async (req, res, next) => {
   });
 };
 
-export const addFriend = async (req, res, next) => {
+export const sendFriendRequest = async (req, res, next) => {
   const userId = req.user._id;
-  const { username } = req.params;
+  const { username } = req.body;
 
-  const user = await User.findById(userId);
-  if (!user) return next(new Error("User not found!"), { cause: 404 });
+  const sender = await User.findById(userId);
+  const receiver = await User.findOne({ username });
 
-  const friend = await User.findOne({ username });
-  if (!friend)
-    return next(new Error("User with this username not found!"), {
-      cause: 404,
-    });
+  if (!receiver) return next(new Error("User not found!"), { cause: 404 });
+  if (receiver._id.equals(sender._id))
+    return next(new Error("You cannot add yourself!"), { cause: 400 });
 
-  if (user.friends.includes(friend._id))
-    return next(new Error("User already added to friends!"), { cause: 400 });
+  if (receiver.friends.includes(sender._id))
+    return next(new Error("Already friends!"), { cause: 400 });
 
-  user.friends.push(friend._id);
-  await user.save();
+  if (receiver.friendRequests.includes(sender._id))
+    return next(new Error("Request already sent!"), { cause: 400 });
+
+  receiver.friendRequests.push(sender._id);
+  await receiver.save();
 
   return res.json({
     success: true,
-    message: "User added to friends!",
-    results: { friends: user.friends },
+    message: "Friend request sent!",
   });
 };
 
+
+export const acceptFriendRequest = async (req, res, next) => {
+  const userId = req.user._id;
+  const { username } = req.body;
+
+  const receiver = await User.findById(userId);
+  const sender = await User.findOne({ username });
+
+  if (!sender) return next(new Error("User not found!"), { cause: 404 });
+
+  if (!receiver.friendRequests.includes(sender._id))
+    return next(new Error("No friend request from this user!"), { cause: 400 });
+
+  receiver.friendRequests = receiver.friendRequests.filter(
+    (id) => id.toString() !== sender._id.toString()
+  );
+
+  receiver.friends.push(sender._id);
+  sender.friends.push(receiver._id);
+
+  await receiver.save();
+  await sender.save();
+
+  return res.json({
+    success: true,
+    message: "Friend request accepted!",
+  });
+};
+
+
 export const removeFriend = async (req, res, next) => {
   const userId = req.user._id;
-  const { username } = req.params;
+  const { username } = req.body; 
 
   const user = await User.findById(userId);
   if (!user) return next(new Error("User not found!"), { cause: 404 });
@@ -165,6 +211,7 @@ export const removeFriend = async (req, res, next) => {
     results: { friends: user.friends },
   });
 };
+
 
 export const getFriends = async (req, res, next) => {
   const userId = req.user._id;
