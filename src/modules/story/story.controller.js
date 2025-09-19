@@ -10,75 +10,72 @@ const router = Router();
 
 /**
  * @route   POST /stories
- * @desc    Create a new story
- 
+ * @desc    Create a new story (image or video).
+ *          The story will automatically expire after 24 hours from creation.
+ *          Requires file upload (image/video) in 'storyMedia'.
  */
 router.post(
   "/",
   isAuthenticated,
-  uploadCloud().single("storyMedia"),
+  uploadCloud().single("story"),
   validation(schema.createStory),
   asyncHandler(service.createStory)
 );
 
 /**
  * @route   GET /stories
- * @desc    Get stories from contacts
- 
+ * @desc    Get all active stories from the current user and their friends.
+ *          Only returns stories that are not expired.
  */
 router.get(
   "/",
   isAuthenticated,
-  validation(schema.getStoriesFromContacts),
-  asyncHandler(service.getStoriesFromContacts)
+  asyncHandler(service.getStories)
 );
 
 /**
- * @route   GET /stories/me
- * @desc    Get current user's stories
- 
+ * @route   GET /stories/:storyId
+ * @desc    Get a single story by its ID.
+ *          Useful for fetching one specific story and its details.
  */
 router.get(
-  "/me",
+  "/:storyId",
   isAuthenticated,
-  validation(schema.getMyStories),
-  asyncHandler(service.getMyStories)
-);
-
-/**
- * @route   GET /stories/:id
- * @desc    Get story by ID
- 
- */
-router.get(
-  "/:id",
-  isAuthenticated,
-  validation(schema.getStoryById),
   asyncHandler(service.getStoryById)
 );
 
 /**
- * @route   DELETE /stories/:id
- * @desc    Delete a story
- 
+ * @route   PATCH /stories/:storyId/view
+ * @desc    Mark a story as viewed by the current user.
+ *          Saves the user ID and timestamp inside 'viewedBy'.
+ */
+router.patch(
+  "/:storyId/view",
+  isAuthenticated,
+  asyncHandler(service.viewStory)
+);
+
+/**
+ * @route   DELETE /stories/:storyId
+ * @desc    Delete a story created by the current user.
+ *          Removes the story media from Cloudinary as well.
  */
 router.delete(
-  "/:id",
+  "/:storyId",
   isAuthenticated,
-  validation(schema.deleteStory),
   asyncHandler(service.deleteStory)
 );
 
 /**
- * @route   POST /stories/:id/view
- * @desc    Mark story as viewed
- 
+ * @route   GET /stories/:storyId/viewers
+ * @desc    Get the list of users who viewed a specific story.
+ *          Returns user info (username, profilePic, status, etc.).
  */
-router.post(
-  "/:id/view",
+router.get(
+  "/:storyId/viewers",
   isAuthenticated,
-  validation(schema.viewStory),
-  asyncHandler(service.viewStory)
+  asyncHandler(service.getStoryViewers)
 );
+
 
 export default router;
