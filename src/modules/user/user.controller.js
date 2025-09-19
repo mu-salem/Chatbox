@@ -126,4 +126,14 @@ router.get(
   asyncHandler(service.getFriends)
 );
 
+/**
+ * @route   GET /user/friend-requests
+ * @desc    Get user friend requests
+ */
+router.get(
+  "/friend-requests",
+  isAuthenticated,
+  asyncHandler(service.getFriendRequests)
+)
+
 export default router;

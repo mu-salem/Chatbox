@@ -158,7 +158,7 @@ export const handleFriendRequest = async (req, res, next) => {
   const sender = await User.findOne({ username });
 
   if (!sender) return next(new Error("User not found!"), { cause: 404 });
-  
+
   if (!receiver.friendRequests.includes(sender._id)) {
     return next(new Error("No friend request from this user!"), { cause: 400 });
   }
@@ -227,27 +227,33 @@ export const removeFriend = async (req, res, next) => {
 
 export const getFriends = async (req, res, next) => {
   const userId = req.user._id;
+  const user = await User.findById(userId).populate({
+    path: "friends",
+    select: "username firstLetter profilePic bio status",
+    options: { sort: { firstLetter: 1 } },
+  });
+
+  if (!user) return next(new Error("User not found!"), { cause: 404 });
+
+  return res.json({
+    success: true,
+    results: { friends: user.friends },
+  });
+};
+
+export const getFriendRequests = async (req, res, next) => {
+  const userId = req.user._id;
+
   const user = await User.findById(userId).populate(
-    "friends",
-    "username firstLetter profilePic bio status"
+    "friendRequests",
+    "username profilePic bio"
   );
 
   if (!user) return next(new Error("User not found!"), { cause: 404 });
 
-  const grouped = {};
-
-  user.friends.forEach((friend) => {
-    const letter = friend.firstLetter ? friend.firstLetter.toUpperCase() : "#";
-
-    if (!grouped[letter]) {
-      grouped[letter] = [];
-    }
-
-    grouped[letter].push(friend);
-  });
-
   return res.json({
     success: true,
-    results: { friends: grouped },
+    count: user.friendRequests.length,
+    results: { friendRequests: user.friendRequests },
   });
 };
