@@ -34,14 +34,25 @@ router.get(
 );
 
 /**
- * @route   GET /stories/:storyId
- * @desc    Get a single story by its ID.
+ * @route   GET /stories/:username
+ * @desc    Get a single story by its username.
  *          Useful for fetching one specific story and its details.
  */
 router.get(
-  "/:storyId",
+  "/:username",
   isAuthenticated,
-  asyncHandler(service.getStoryById)
+  asyncHandler(service.getStoryByName)
+);
+
+/** 
+ * @route   GET /stories/active-stories/grouped
+ * @desc    Get all active (non-expired) stories from friends, grouped by user.
+ *          Each group contains the user's info and their active stories.
+ */
+router.get(
+  "/active-stories/grouped",
+  isAuthenticated,
+  asyncHandler(service.getActiveStories)
 );
 
 /**

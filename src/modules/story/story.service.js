@@ -57,16 +57,40 @@ export const getStories = async (req, res, next) => {
   });
 };
 
-export const getStoryById = async (req, res, next) => {
-  const { storyId } = req.params;
-  const userId = req.user._id;
+export const getStoryByName = async (req, res, next) => {
+  const { username } = req.params;
+  const currentUserId = req.user._id;
 
-  const story = await Story.findById(storyId).populate(
-    "user",
-    "username profilePic"
+  const currentUser = await User.findById(currentUserId).select(
+    "username friends"
   );
+  if (!currentUser) {
+    return next(new Error("Current user not found!", { cause: 404 }));
+  }
 
-  if (!story) return next(new Error("Story not found!", { cause: 404 }));
+  const user = await User.findOne({ username }).select(
+    "_id username profilePic"
+  );
+  if (!user) {
+    return next(new Error("User not found!", { cause: 404 }));
+  }
+
+  const isFriend = currentUser.friends.some(
+    (f) => f.toString() === user._id.toString()
+  );
+  if (!isFriend && user._id.toString() !== currentUserId.toString()) {
+    return next(
+      new Error("You are not allowed to view this story", { cause: 403 })
+    );
+  }
+
+  const story = await Story.findOne({ user: user._id })
+    .sort({ createdAt: -1 })
+    .populate("user", "username profilePic");
+
+  if (!story) {
+    return next(new Error("Story not found!", { cause: 404 }));
+  }
 
   if (story.expiresAt < new Date()) {
     return next(new Error("Story has expired!", { cause: 410 }));
@@ -74,9 +98,57 @@ export const getStoryById = async (req, res, next) => {
 
   return res.status(200).json({
     success: true,
+    currentUser: currentUser.username,
     results: story,
   });
 };
+
+export const getActiveStories = async (req, res, next) => {
+  const userId = req.user._id;
+
+  const currentUser = await User.findById(userId).select("username friends");
+  if (!currentUser) {
+    return next(new Error("Current user not found!", { cause: 404 }));
+  }
+
+  const stories = await Story.find({
+    user: { $in: currentUser.friends },
+    expiresAt: { $gt: new Date() }, 
+  })
+    .sort({ createdAt: -1 }) 
+    .populate("user", "username profilePic")
+    .populate("viewedBy.user", "username profilePic"); 
+
+  if (!stories.length) {
+    return res.status(200).json({
+      success: true,
+      currentUser: currentUser.username,
+      count: 0,
+      results: [],
+    });
+  }
+
+  const grouped = {};
+  stories.forEach((story) => {
+    const uid = story.user._id.toString();
+    if (!grouped[uid]) {
+      grouped[uid] = {
+        user: story.user,
+        stories: [],
+      };
+    }
+    grouped[uid].stories.push(story.toObject());
+  });
+
+  return res.status(200).json({
+    success: true,
+    currentUser: currentUser.username,
+    count: Object.keys(grouped).length,
+    results: Object.values(grouped),
+  });
+};
+
+
 
 export const viewStory = async (req, res, next) => {
   const { storyId } = req.params;
@@ -109,7 +181,6 @@ export const viewStory = async (req, res, next) => {
   });
 };
 
-
 export const deleteStory = async (req, res, next) => {
   const { storyId } = req.params;
   const userId = req.user._id;
@@ -118,7 +189,9 @@ export const deleteStory = async (req, res, next) => {
   if (!story) return next(new Error("Story not found!", { cause: 404 }));
 
   if (story.user.toString() !== userId.toString()) {
-    return next(new Error("You are not authorized to delete this story!", { cause: 403 }));
+    return next(
+      new Error("You are not authorized to delete this story!", { cause: 403 })
+    );
   }
 
   if (story.media?.public_id) {
