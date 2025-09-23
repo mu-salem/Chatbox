@@ -121,7 +121,7 @@ export const searchUsers = async (req, res, next) => {
   const users = await User.find({
     _id: { $ne: userId },
     username: { $regex: `^${username}`, $options: "i" },
-  }).select("-password -OTP -__v -provider");
+  }).select("-password -OTP -__v -provider -mediaShared");
 
   const results = users.map((u) => ({
     ...u.toObject(),
