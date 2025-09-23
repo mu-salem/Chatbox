@@ -10,7 +10,7 @@ export const createStory = joi.object({
           .required(),
         size: joi
           .number()
-          .max(10 * 1024 * 1024)  
+          .max(10 * 1024 * 1024)  // 10MB
           .required(),
       })
       .unknown(true)

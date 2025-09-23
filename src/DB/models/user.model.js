@@ -5,7 +5,6 @@ import {
   defaultPublicID_profilePic,
   defaultSecureURL_profilePic,
 } from "../../utils/constants/cloudinaryConstants.js";
-import { dncrypt, encrypt } from "../../utils/encryption/encryption.js";
 
 const userSchema = new Schema(
   {

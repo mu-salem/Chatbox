@@ -105,7 +105,11 @@ export const getUserByName = async (req, res, next) => {
 };
 
 export const searchUsers = async (req, res, next) => {
+  const userId = req.user._id;
   const { username } = req.query;
+
+  const user = await User.findById(userId).populate("friends", "_id");
+  if (!user) return next(new Error("User not found!"), { cause: 404 });
 
   if (!username || username.trim() === "") {
     return res.status(400).json({
@@ -115,13 +119,22 @@ export const searchUsers = async (req, res, next) => {
   }
 
   const users = await User.find({
+    _id: { $ne: userId },
     username: { $regex: `^${username}`, $options: "i" },
   }).select("-password -OTP -__v -provider");
 
+  const results = users.map((u) => ({
+    ...u.toObject(),
+    isFriend: user.friends.some(
+      (f) => f._id.toString() === u._id.toString()
+    ),
+  }));
+
   return res.json({
     success: true,
-    count: users.length,
-    users,
+    count: results.length,
+    currentUser: user.username,
+    results,
   });
 };
 

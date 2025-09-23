@@ -79,6 +79,7 @@ router.get(
  */
 router.get(
   "/search",
+  isAuthenticated,
   validation(schema.searchUsers),
   asyncHandler(service.searchUsers)
 );
