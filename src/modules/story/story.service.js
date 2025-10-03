@@ -39,11 +39,13 @@ export const createStory = async (req, res, next) => {
 export const getStories = async (req, res, next) => {
   const userId = req.user._id;
 
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate("friends", "_id");
   if (!user) return next(new Error("User not found!", { cause: 404 }));
 
+  const userAndFriendsIds = [userId, ...user.friends.map((f) => f._id)];
+
   const stories = await Story.find({
-    user: userId,
+    user: { $in: userAndFriendsIds },
     expiresAt: { $gt: new Date() },
   })
     .populate("user", "username profilePic")
@@ -54,7 +56,6 @@ export const getStories = async (req, res, next) => {
     results: stories,
   });
 };
-
 
 export const getStoryByName = async (req, res, next) => {
   const { username } = req.params;
